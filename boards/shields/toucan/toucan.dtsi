@@ -131,20 +131,9 @@
     };
 
 
-    split_inputs {
-        #address-cells = <1>;
-        #size-cells = <0>;
-
-        trackpad_split: trackpad_split@0 {
-            compatible = "zmk,input-split";
-            reg = <0>;
-        };
-    };
-
     trackpad_listener: trackpad_listener {
         compatible = "zmk,input-listener";
         status = "disabled";
-        device = <&trackpad_split>;
         input-processors = <&zip_xy_scaler 100 100>, <&zip_scroll_scaler 1 20>, <&zip_zoom_mapper>, <&is_touching_processor>, <&swipe_button_mapper>;
         scroller {
             layers = <1 2>;

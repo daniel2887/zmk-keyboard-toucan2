@@ -19,31 +19,19 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #include <zmk/endpoints.h>
 #include <zmk/keymap.h>
 #include <zmk/usb.h>
+#if IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
 #include <zmk/split/central.h>
+#endif
 
-#if defined(CONFIG_TOUCAN_STATUS_SCREEN) && CONFIG_TOUCAN_STATUS_SCREEN == 2
-#include "battery_arc.h"
-#include "battery_arc_peripheral.h"
-#include "profile_arc.h"
-#include "output_arc.h"
-#include "chart.h"
-#else
 #include "battery.h"
 #include "battery_peripheral.h"
-#include "profile.h"
-#include "output.h"
-#endif
-
-#if defined(CONFIG_TOUCAN_STATUS_SCREEN) && CONFIG_TOUCAN_STATUS_SCREEN == 1
-#include "layer_logo.h"
-#elif defined(CONFIG_TOUCAN_STATUS_SCREEN) && CONFIG_TOUCAN_STATUS_SCREEN == 2
-#include "layer_arc.h"
-#else
+#include "battery_peripheral_left.h"
 #include "layer.h"
-#endif
-
+#include "output.h"
+#include "profile.h"
 #include "screen.h"
 #include "sleep.h"
+#include "background.h"
 
 struct connection_status_state {
     bool connected;
@@ -65,14 +53,19 @@ static void draw_top(lv_obj_t *widget, lv_color_t cbuf[], const struct status_st
     }
 
     // Draw widgets
+#if IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
     draw_output_status(canvas, state);
-    #if defined(CONFIG_TOUCAN_STATUS_SCREEN) && CONFIG_TOUCAN_STATUS_SCREEN == 2
-    draw_chart_status(canvas, state);
-    #endif
     draw_layer_status(canvas, state);
     draw_profile_status(canvas, state);
     draw_battery_status(canvas, state);
     draw_battery_peripheral_status(canvas, state);
+#else
+    // Draw a nice background and peripheral battery, because
+    // the peripheral half can't display most anything else,
+    // for now.
+    draw_background(canvas);
+    draw_battery_peripheral_left_status(canvas, state);
+#endif
 }
 
 /**
@@ -116,6 +109,7 @@ ZMK_SUBSCRIPTION(widget_battery_status, zmk_usb_conn_state_changed);
 // R
 static void set_battery_peripheral_status(struct zmk_widget_screen *widget,
                                struct battery_peripheral_status_state state) {
+#if IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
 #if IS_ENABLED(CONFIG_USB_DEVICE_STACK)
     widget->state.charging_p = state.usb_present;
 #endif /* IS_ENABLED(CONFIG_USB_DEVICE_STACK) */
@@ -124,6 +118,7 @@ static void set_battery_peripheral_status(struct zmk_widget_screen *widget,
     zmk_split_central_get_peripheral_battery_level(0, &level);
 
     widget->state.battery_p = level;
+#endif
     draw_top(widget->obj, widget->cbuf, &widget->state);
 }
 
@@ -138,7 +133,7 @@ static struct battery_peripheral_status_state battery_peripheral_status_get_stat
 
 
     return (struct battery_peripheral_status_state){
-        .level = ev->state_of_charge,
+        .level = (ev != NULL) ? ev->state_of_charge : 0,
 #if IS_ENABLED(CONFIG_USB_DEVICE_STACK)
         .usb_present = zmk_usb_is_powered(),
 #endif /* IS_ENABLED(CONFIG_USB_DEVICE_STACK) */
@@ -150,6 +145,7 @@ ZMK_DISPLAY_WIDGET_LISTENER(widget_battery_peripheral_status, struct battery_per
 
 ZMK_SUBSCRIPTION(widget_battery_peripheral_status, zmk_peripheral_battery_state_changed);
 
+#if IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
 /**
  * Layer status
  **/
@@ -214,6 +210,7 @@ ZMK_SUBSCRIPTION(widget_output_status, zmk_usb_conn_state_changed);
 #if defined(CONFIG_ZMK_BLE)
 ZMK_SUBSCRIPTION(widget_output_status, zmk_ble_active_profile_changed);
 #endif
+#endif
 
 /**
  * Activity state handling for sleep screen
@@ -255,34 +252,6 @@ static int display_activity_event_handler(const zmk_event_t *eh) {
 ZMK_LISTENER(nice_view_gem_display, display_activity_event_handler);
 ZMK_SUBSCRIPTION(nice_view_gem_display, zmk_activity_state_changed);
 
-#if defined(CONFIG_TOUCAN_STATUS_SCREEN) && CONFIG_TOUCAN_STATUS_SCREEN == 2
-/**
- * WPM status
- */
-    static void set_chart_status(struct zmk_widget_screen *widget, struct chart_status_state state) {
-    widget->state.wpm = state.wpm;
-    draw_top(widget->obj, widget->cbuf, &widget->state);
-}
-
-static void chart_status_update_cb(struct chart_status_state state) {
-    struct zmk_widget_screen *widget;
-    SYS_SLIST_FOR_EACH_CONTAINER(&widgets, widget, node) {
-        set_chart_status(widget, state);
-    }
-}
-
-static struct chart_status_state chart_status_get_state(const zmk_event_t *eh) {
-    const struct zmk_wpm_state_changed *ev = as_zmk_wpm_state_changed(eh);
-    return (struct chart_status_state){
-        .wpm = (ev != NULL) ? ev->state : zmk_wpm_get_state(),
-    };
-}
-
-ZMK_DISPLAY_WIDGET_LISTENER(widget_chart_status, struct chart_status_state,
-                            chart_status_update_cb, chart_status_get_state);
-ZMK_SUBSCRIPTION(widget_chart_status, zmk_wpm_state_changed);
-#endif
-
 /**
  * Initialization
  **/
@@ -298,12 +267,10 @@ int zmk_widget_screen_init(struct zmk_widget_screen *widget, lv_obj_t *parent) {
     sys_slist_append(&widgets, &widget->node);
     widget_battery_status_init();
     widget_battery_peripheral_status_init();
+#if IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
     widget_layer_status_init();
     widget_output_status_init();
-
-    #if defined(CONFIG_TOUCAN_STATUS_SCREEN) && CONFIG_TOUCAN_STATUS_SCREEN == 2
-    widget_chart_status_init();
-    #endif
+#endif
 
     return 0;
 }

@@ -1,18 +1,18 @@
 manifest:
   remotes:
-    - name: zmkfirmware
-      url-base: https://github.com/zmkfirmware
+    - name: daniel2887
+      url-base: https://github.com/daniel2887
     - name: caksoylar
       url-base: https://github.com/caksoylar
-    - name: geeksville
-      url-base: https://github.com/geeksville
     - name: beekeeb
       url-base: https://github.com/beekeeb
+    - name: oleksandrmaslov
+      url-base: https://github.com/oleksandrmaslov
   projects:
     - name: zmk
-      remote: zmkfirmware
+      remote: daniel2887
+      revision: v0.3_ds87
       import: app/west.yml
-      revision: v0.3
     - name: zmk-rgbled-widget
       remote: caksoylar
       revision: v0.3
@@ -21,6 +21,9 @@ manifest:
       revision: main
     - name: zmk-input-zoom
       remote: beekeeb
+      revision: main
+    - name: zmk-pointing-acceleration
+      remote: oleksandrmaslov
       revision: main
   self:
     path: config

@@ -44,9 +44,6 @@ nice_view_spi: &spi0 {
 };
 
 &trackpad_listener {
-    status = "okay";
+    status = "disabled";
 };
 
-&zip_zoom_mapper {
-    status = "okay";
-};
