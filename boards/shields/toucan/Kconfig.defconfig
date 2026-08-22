@@ -16,10 +16,15 @@ endif
 
 
 
-if SHIELD_TOUCAN_LEFT || SHIELD_TOUCAN_RIGHT
+if SHIELD_TOUCAN_LEFT
 
+# SPI is only used on Left half for nice_view_gem display
 config SPI
     default y
+
+endif
+
+if SHIELD_TOUCAN_LEFT || SHIELD_TOUCAN_RIGHT
 
 config ZMK_SPLIT
     default y
