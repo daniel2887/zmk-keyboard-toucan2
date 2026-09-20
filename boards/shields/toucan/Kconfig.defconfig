@@ -1,7 +1,10 @@
 if SHIELD_TOUCAN_RIGHT
 
+# Upstream default: "Toucan"
+# config ZMK_KEYBOARD_NAME
+#     default "Toucan"
 config ZMK_KEYBOARD_NAME
-    default "Toucan"
+    default "Toucan 2 Right"
 
 config ZMK_SPLIT_ROLE_CENTRAL
     default y
@@ -17,6 +20,12 @@ endif
 
 
 if SHIELD_TOUCAN_LEFT
+
+# Upstream default: Left was central ("Toucan"). In Toucan 2, Left is peripheral.
+# config ZMK_KEYBOARD_NAME
+#     default "Toucan"
+config ZMK_KEYBOARD_NAME
+    default "Toucan 2 Left"
 
 # SPI is only used on Left half for nice_view_gem display
 config SPI

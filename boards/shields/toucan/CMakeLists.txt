@@ -1,0 +1,1 @@
+target_sources_ifdef(CONFIG_CDC_ACM_DTE_RATE_CALLBACK_SUPPORT app PRIVATE src/usb_reset.c)
