@@ -70,11 +70,13 @@
         report-rate-lp1 = <10>;        // 10ms LP1 scanning (default was 80ms)
 
         report-rate-lp2 = <640>; // 640ms report rate in LP2 state means 55uA draw rather than default 160ms 174uA draw
-        scroll-angle = <30>; // The default angle (about 47 deg) is too big on toucan2 I think
+        // scroll-angle = <30>; // The default angle (about 47 deg) is too big on toucan2 I think
         sensitivity = <100>;
         scroll-sensitivity = <100>;
 
         filter-settings=<0x0B>;
+        // Low-speed IIR filter damping: 32 (32/256 beta = 0.125) balances noise suppression and multi-touch tracking (Datasheet 5.9.2.1)
+        filter-dynamic-bottom = <32>;
         hold-time = <500>;
  
         //zoom;
